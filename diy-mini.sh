@@ -102,6 +102,21 @@ chmod 755 package/base-files/files/bin/coremark.sh
 # 定时限速插件
 git clone --depth=1 https://github.com/sirpdboy/luci-app-eqosplus package/luci-app-eqosplus
 
+# UA3F：统一 User-Agent / TTL / IPID，降低校园网多设备检测
+git clone --depth=1 https://github.com/SunBK201/UA3F.git package/UA3F
+
+# luci-app-giwifi：GIWIFI 校园网认证登录（配合 UA3F 使用）
+rm -rf package/GIWIFI-src package/luci-app-giwifi
+git clone --depth=1 https://github.com/mcitem/GIWIFI.git package/GIWIFI-src
+cp -a package/GIWIFI-src/openwrt/package/luci-app-giwifi package/luci-app-giwifi
+mkdir -p package/luci-app-giwifi/root/usr/bin
+curl -fL "https://github.com/mcitem/GIWIFI/releases/latest/download/giwifi_aarch64-unknown-linux-musl" \
+  -o package/luci-app-giwifi/root/usr/bin/giwifi
+chmod 755 package/luci-app-giwifi/root/usr/bin/giwifi
+# luci.mk 已调用 BuildPackage，去掉重复定义
+sed -i '/^$(eval $(call BuildPackage,luci-app-giwifi))/d' package/luci-app-giwifi/Makefile
+rm -rf package/GIWIFI-src
+
 
 #上游已经把编译器资源包删除了，先禁用吧
 sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile

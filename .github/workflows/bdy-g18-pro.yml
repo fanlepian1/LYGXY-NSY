@@ -2,8 +2,6 @@ name: bdy-g18-pro
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: 0 20 * * *
 
 env:
   REPO_URL: https://github.com/zhoufuli/immortalwrt-rk356x
