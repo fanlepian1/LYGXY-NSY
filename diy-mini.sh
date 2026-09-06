@@ -105,6 +105,7 @@ git clone --depth=1 https://github.com/sirpdboy/luci-app-eqosplus package/luci-a
 # UA3F：统一 User-Agent / TTL / IPID，降低校园网多设备检测
 git clone --depth=1 https://github.com/SunBK201/UA3F.git package/UA3F
 
+
 # luci-app-giwifi：GIWIFI 校园网认证登录（配合 UA3F 使用）
 rm -rf package/GIWIFI-src package/luci-app-giwifi
 git clone --depth=1 https://github.com/mcitem/GIWIFI.git package/GIWIFI-src
