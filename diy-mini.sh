@@ -119,9 +119,29 @@ sed -i '/^$(eval $(call BuildPackage,luci-app-giwifi))/d' package/luci-app-giwif
 rm -rf package/GIWIFI-src
 
 
-#上游已经把编译器资源包删除了，先禁用吧
-sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
+# 避免 patch-kernel.sh 删除 rust vendor 的 Cargo.toml.orig
+# https://github.com/openwrt/packages/issues/27485
+if grep -qF "*.orig" scripts/patch-kernel.sh; then
+	sed -i "s/-name '\\*\\.orig' -o //g" scripts/patch-kernel.sh
+fi
 
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
+
+#上游已经把编译器资源包删除了，先禁用吧
+sed -i 's/ci-llvm=true/ci-llvm=false/g' feeds/packages/lang/rust/Makefile
+
+# 即使 .orig 已被删，也从 checksum 里去掉该条目，避免 rust host 编译失败
+if [ -f feeds/packages/lang/rust/Makefile ] && ! grep -q 'Cargo.toml.orig checksum fix' feeds/packages/lang/rust/Makefile; then
+	awk '
+		/^define Host\/Compile$/ {
+			print
+			print "\t# Cargo.toml.orig checksum fix"
+			print "\t-find $(HOST_BUILD_DIR)/vendor -name '\''.cargo-checksum.json'\'' -exec sed -i '\''/Cargo.toml.orig/d'\'' {} +"
+			next
+		}
+		{ print }
+	' feeds/packages/lang/rust/Makefile > feeds/packages/lang/rust/Makefile.tmp
+	mv feeds/packages/lang/rust/Makefile.tmp feeds/packages/lang/rust/Makefile
+fi
