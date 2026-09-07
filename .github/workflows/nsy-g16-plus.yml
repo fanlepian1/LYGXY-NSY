@@ -25,11 +25,13 @@ env:
   FIRMWARE_RELEASE: true
   FIRMWARE_TAG: nsy-g16-plus
   TZ: Asia/Shanghai
-  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
   Build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
 
     outputs:
       COMMIT_AUTHOR: ${{ steps.clone.outputs.COMMIT_AUTHOR }}
@@ -199,11 +201,13 @@ jobs:
         echo "FIRMWARE_PATH=$PWD" >> $GITHUB_ENV
 
     - name: Upload Firmware To Artifact
-      if: steps.compile.outputs.status == 'success' && env.FIRMWARE_RELEASE != 'true'
+      if: steps.compile.outputs.status == 'success'
       uses: actions/upload-artifact@main
       with:
-        name: ${{ env.SOURCE_REPO }}-firmware-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.FILE_DATE }}
+        name: ${{ env.FIRMWARE_TAG }}-${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE_PATH }}
+        if-no-files-found: error
+        retention-days: 30
 
     - name: Upload Firmware To Release
       if: steps.compile.outputs.status == 'success' && env.FIRMWARE_RELEASE == 'true'
@@ -212,7 +216,7 @@ jobs:
         name: R${{ env.DATE }} for ${{ env.FIRMWARE_TAG }}
         allowUpdates: true
         tag: ${{ env.TAG_DATE }}-${{ env.FIRMWARE_TAG }}
-        token: ${{ env.GITHUB_TOKEN }}
+        token: ${{ github.token }}
         artifacts: ${{ env.FIRMWARE_PATH }}/*
         body: |
           **This is OpenWrt Firmware for ${{ env.FIRMWARE_TAG }}**
